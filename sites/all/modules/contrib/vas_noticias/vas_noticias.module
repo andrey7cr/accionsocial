@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Noticias VAS feature.
+ */
+
+include_once 'vas_noticias.features.inc';

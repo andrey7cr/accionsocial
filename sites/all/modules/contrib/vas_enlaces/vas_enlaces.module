@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Enlaces VAS feature.
+ */
+
+include_once 'vas_enlaces.features.inc';

@@ -1,0 +1,177 @@
+<?php
+
+
+function test_module_menu() {
+
+  // Path report link.
+  $items['reportar'] = array(
+    'title' => t('Online Advertising Link'),
+    'description' => t('Path to the online advertising value report Link'),
+    'type' => MENU_CALLBACK,
+    'page callback' => '_test_module_reportar_link',
+    'access callback' => 'user_is_logged_in',
+  );
+  
+  return $items;
+
+}
+
+function test_module_node_insert($node){
+    if ($node->type == 'publicaciones_node_form'){
+    foreach($node->editores as $id) {
+     $user=user_load($id); 
+     drupal_mail('test_module', 'colaboradores', $user->mail, 'und', $params=array('username' => $user->name, 'title' => $node->title, 'nid' => $node->nid) , $from = NULL, $send = TRUE);
+
+    }
+  }
+}
+
+function _test_module_reportar_link(){
+    $json = stripslashes($_POST['url']);
+    $url = json_decode($json);
+    drupal_mail('test_module', 'enlaces', 'info@estudiomanati.com', 'und', $params=array('url' => $url) , $from = NULL, $send = TRUE);
+    return ' ';
+}
+
+
+function _test_module_enviar_correos(){
+    
+    $json = stripslashes($_POST['colaboradores']);
+    $colaboradores = json_decode($json);
+    foreach($colaboradores as $id ){ 
+     $user = user_load($id);  
+    }
+    
+    return ' ';
+}
+
+function test_module_mail($key, &$message, $params) {
+  global $base_url;
+
+  switch ($key) {
+
+    case 'colaboradores':
+      $message['headers']['Content-Type'] = 'text/html';
+      $message['subject'] = t('Usted ha sido invitado...');
+      $message['body'][] = t('<p>Querido @username,</p><p>Usted ha sido notificado en una publicación conjunta:</p>', array('@username' => $params['username']));
+      $message['body'][] = t('<a href="' . $base_url . '/node/@nid">@title</a>', array('@nid' => $params['nid'],'@title' => $params['title']));
+      break;
+      
+    case 'enlaces':
+     $message['headers']['Content-Type'] = 'text/html';
+     $message['subject'] = t('Reporte de Link');
+     $message['body'][] = t('<p>Se ha reportado el siguiente link:</p>');
+     $message['body'][] = t('<a href="@url">Enlace</a>', array('@url' => $params['url']));
+         
+    break;
+      
+  }
+}
+
+function test_module_page_alter(&$page) {
+  
+    if(user_is_logged_in())
+    {
+     drupal_add_css('li.menu-440 { visibility:hidden; }','inline');
+    
+    }
+    
+}
+
+
+function test_module_form_alter(&$form, &$form_state, $form_id) {
+  
+    
+    if ($form_id == 'user_register_form'){ 
+         /* echo '<pre>' ;
+          var_dump($form);
+          echo '</pre>' ;*/
+          
+         $form["account"]["name"]["#title"] = 'Nombre';
+         $form["account"]["mail"]["#title"] = 'Correo electrónico';
+         $form['actions']['submit']['#value'] = 'Crear Cuenta';
+    }
+    
+    if($form_id == 'agenda_node_form'){
+         
+        $form['field_lugar']['und'][0]['value']['#attributes']['placeholder'] = t( 'Lugar' );
+        $form['field_lugar']['und'][0]['value']['#title']='';
+        
+        $form['title']['#attributes']['placeholder']= t( 'Título' );
+        $form['title']['#title']= '';
+        
+        $form['field_agenda_descripcion']['und'][0]['value']['#attributes']['placeholder'] = t( 'Descripción' );
+        $form['field_agenda_descripcion']['und'][0]['value']['#title']='';
+        
+        $form['field_costo_entrada']['und'][0]['value']['#attributes']['placeholder'] = t( 'Costo de la entrada' );
+        $form['field_costo_entrada']['und'][0]['value']['#title']='';
+
+    }  
+      
+    if ($form_id == 'user_login'){
+         
+        $form['name']['#attributes']['placeholder'] = t( 'Username' );
+        $form['pass']['#attributes']['placeholder'] = t( 'Password' );
+        $form['name']['#title']='';
+        $form['pass']['#title']='';
+        }
+      
+    if($form_id == 'noticias_node_form'){
+     $form[ '#suffix' ]='Su aporte será revisado por el equipo de este sitio antes de ser publicado'; 
+     
+     //dsm($form);
+     $form['title']['#attributes']['placeholder']= t( 'Título' );
+     $form['title']['#title']= '';
+        
+     $form['field_autor']['und'][0]['value']['#attributes']['placeholder'] = t( 'Autor' );
+     $form['field_autor']['und'][0]['value']['#title']='';
+        
+     $form['field_resumen']['und'][0]['value']['#attributes']['placeholder'] = t( 'Resumen' );
+     $form['field_resumen']['und'][0]['value']['#title']='';
+    }
+    else if ($form_id == 'publicaciones_node_form'){
+     $form[ '#suffix' ]='Su aporte será revisado por el equipo de este sitio antes de ser publicado'; 
+     
+     $form['field_autor']['und'][0]['value']['#attributes']['placeholder']= t( 'Autor' );
+     $form['field_autor']['und'][0]['value']['#title']='';
+     
+     $form['title']['#title']='';
+     $form['title']['#attributes']['placeholder']= t( 'Título' );
+     
+     $form['field_resumen']['und'][0]['value']['#attributes']['placeholder']= t( 'Resumen' );
+     $form['field_resumen']['und'][0]['value']['#title']='';
+    
+     $form['correos_publicaciones'] = array(
+      '#type' => 'fieldset', 
+      '#weight' => 5, 
+      );
+      
+      
+     $role = user_role_load_by_name('editor');
+     $result = db_select('users_roles', 'ur')
+     ->fields('ur', array('uid'))
+     ->condition('rid', $role->rid)
+     ->execute();
+
+    foreach($result as $record) {
+     $user=user_load($record->uid);
+     $uids[$user->uid] = $user->name;
+
+    }
+      
+    $form['correos_publicaciones']['editores'] = array(
+    '#title' => t('Editores'),
+    '#description' => t('Seleccione los usuarios a los cuales se le notificará sobre este contenido'), 
+    '#type' => 'select',
+    '#options' => $uids, //array(1 => 'opcion 1', 2 => 'opcion 2'),
+    '#required' => FALSE,
+    '#default_value' => NULL,
+    '#multiple' => TRUE,
+  );
+  
+       
+    }//else if
+    
+    
+    
+}

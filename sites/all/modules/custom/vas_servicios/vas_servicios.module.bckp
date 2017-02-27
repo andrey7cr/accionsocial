@@ -1,0 +1,511 @@
+<?php
+/**
+ * @file vas_servicios.module
+ */
+
+/**
+ * Function that returns an array of tematicas (tid->name) and the index (0->-Cualquiera-)
+ */
+function vas_servicios_get_tematicas(){
+  $tematicas = array();
+  $tematicas['0'] = t('-Cualquiera-');
+  //Get vid from machine_name
+  $tematicas_vocabulary = taxonomy_vocabulary_machine_name_load('tematicas');
+  $vid = $tematicas_vocabulary->vid;
+  //Build and execute the query 
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'taxonomy_term')
+        ->propertyCondition('vid', $vid);
+  $result = $query->execute();
+  $terms = $result['taxonomy_term'];
+  foreach ($terms as $term) {
+    $term = taxonomy_term_load($term->tid);
+    $tematicas[$term->field_id[LANGUAGE_NONE][0]['value']] = $term->name;
+  }
+  return $tematicas;
+}
+
+/**
+ * Function that return the form used for filtering
+ */
+function vas_servicios_filtering_form($form, &$form_state) {
+  $form = array();
+  $form['filtros'] = array(
+    '#type'   => 'fieldset',
+    '#title'  => t('Búscador de proyectos'),
+    '#weight' => 0,
+  );
+
+  $form ['filtros']['codigo'] = array(
+  '#title' => t('Búsqueda por código o nombre'),
+  '#type' => 'textfield',                                                                                             
+  );
+
+  $form['filtros']['tematica'] = array(
+    '#type'     => 'select',
+    '#title'    => t('Temática'),
+    '#multiple' => FALSE,
+    '#options'  => vas_servicios_get_tematicas(),
+    '#default_value' => isset($_REQUEST['id_tematica']) ? check_plain($_REQUEST['id_tematica']) : 0,
+    '#weight'   => 1,
+  );
+  $form['filtros']['ubicacion_geografica'] = array(
+    '#type'     => 'select',
+    '#title'    => t('Ubicación Geográfica'),
+    '#multiple' => FALSE,
+    '#options'  => array(
+      '0' => t('-Cualquiera-'),
+      '1' => t('San José'),
+      '2' => t('Alajuela'),
+      '3' => t('Cartago'),
+      '4' => t('Heredia'),
+      '5' => t('Guanacaste'),
+      '6' => t('Puntarenas'),
+      '7' => t('Limón'),
+    ),
+    '#default_value' => isset($_REQUEST['id_provincia']) ? check_plain($_REQUEST['id_provincia']) : 0,
+    '#weight'   => 2,
+  );
+  $form['filtros']['seccion'] = array(
+    '#type'     => 'select',
+    '#title'    => t('Sección'),
+    '#multiple' => FALSE,
+    '#options'  => array(
+      '0' => t('-Cualquiera-'),
+      '1' => t('Trabajo Comunal Universitario'),
+      '2' => t('Extensión Docente'),
+      '3' => t('Extensión Cultural'),
+    ),
+    '#default_value' => isset($_REQUEST['id_seccion']) ? check_plain($_REQUEST['id_seccion']) : 0,
+    '#weight'   => 3,
+  );
+  $form['filtros']['submit'] = array(
+    '#type'   => 'submit',
+    '#value'  => t('Aplicar'),
+    '#submit' => array('vas_servicios_filtering_form_submit'),
+    '#weight' => 10
+  );
+  $form['filtros']['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Restablecer'),
+    '#weight' => 11,
+    '#submit' => array('vas_servicios_filtering_form_reset'),
+  );
+  return $form;
+}
+
+/**
+ * Submit para reset de filtering_form
+ */
+function vas_servicios_filtering_form_reset($form, &$form_state){
+  $form_state['redirect'] = array('proyectos');
+}
+
+/**
+ * Submit para filtering_form
+ */
+function vas_servicios_filtering_form_submit(&$form, &$form_state) {
+  $values = $form_state['values'];
+  $tematica  = $values['tematica'];
+  $ubicacion = $values['ubicacion_geografica'];
+  $seccion   = $values['seccion'];
+  $codigo   = strtoupper($values['codigo']);
+    if (!$tematica) {
+      $tematica = -1;
+    }
+    if (!$ubicacion) {
+      $ubicacion = -1;
+    }
+    if (!$seccion) {
+      $seccion = -1;
+    }
+    if (!$codigo) {
+      $codigo = -1;
+    }
+    $options = array(
+      'id_seccion' => $seccion,
+      'id_tematica' => $tematica,
+      'id_provincia' => $ubicacion,
+      'codigo' => $codigo,
+    );
+  $url = vas_servicios_construct_url('index', $options);
+  $proyectos = vas_servicios_process_query_ws($url);
+  $args = array(
+    'type' => 'index',
+    'options' => $options,
+  );
+  $form_state['redirect'] = array('proyectos',array('query' => $options));
+}
+
+/**
+ * Function that constructs the url
+ */
+function vas_servicios_construct_url($type, $options = array()){
+  //$base_url = 'https://externo-bite.ucr.ac.cr/ws/';
+  $base_url = 'https://163.178.114.204/ws/';
+  //$base_url = 'http://10.3.19.205/ws/';
+  $result   = array();
+  $query    = array();
+  $endpoint = '';
+
+  switch ($type) {
+    case 'index':
+      $endpoint = 'buscador_proyectos';
+      if (isset($options['id_seccion'])) {
+        $query['id_seccion'] = $options['id_seccion'];
+      }
+      else {
+        $query['id_seccion'] = -1;
+      }
+
+      if (isset($options['id_tematica'])) {
+        $query['id_tematica'] = $options['id_tematica'];
+      }
+      else {
+        $query['id_tematica'] = -1;
+      }
+
+      if (isset($options['id_provincia'])) {
+        $query['id_provincia'] = $options['id_provincia'];
+      }
+      else {
+        $query['id_provincia'] = -1;
+      }
+
+      if (isset($options['codigo'])) {
+        $query['codigo'] = $options['codigo'];
+      }
+      else {
+        $query['codigo'] = -1;
+      }
+      break;
+
+    case 'retrieve':
+      $endpoint = 'ficha_proyecto';
+      if ($options) {
+        $query['codigo'] = $options;
+      }
+      else{
+        $query['codigo'] = '-1';
+      }
+      break;
+  }
+  $options  = array('query' => $query);
+  $url_ws   = $base_url.$endpoint;
+  $url      = url($url_ws, $options);  
+  //$url      = str_replace('?','',$url);
+ //drupal_set_message(sprintf('<pre>%s</pre>', print_r($url, TRUE)));
+  return $url;
+}
+
+
+/**
+ * Function that make the query to the server and returns the output as json
+ * @param type is the type of query for doing. Actually 'index' and 'retrieve'
+ * @param options is an array with options for the query. This should have id_proyecto for retrieve and for index parameters are received from $_REQUEST
+ * @return the json encoded response from the server
+ */
+function vas_servicios_query_ws($type, $options = array()){
+  if (isset($_REQUEST['id_seccion'])) {
+    $options['id_seccion'] = check_plain($_REQUEST['id_seccion']);
+  }
+  if (isset($_REQUEST['id_tematica'])) {
+    $options['id_tematica'] = check_plain($_REQUEST['id_tematica']);
+  }
+  if (isset($_REQUEST['id_provincia'])) {
+    $options['id_provincia'] = check_plain($_REQUEST['id_provincia']);
+  }
+  if (isset($_REQUEST['codigo'])) {
+    $options['codigo'] = check_plain($_REQUEST['codigo']);
+  }
+
+  $url = vas_servicios_construct_url($type, $options);
+  $result   = vas_servicios_process_query_ws($url);
+  $variable = '';
+  $tema = '';
+  switch ($type) {
+    case 'index':
+      $tema = 'indice_proyectos';
+      $variable = 'proyectos';
+      break;
+    case 'retrieve':
+      $tema = 'proyecto';
+      $variable = 'proyecto';
+      break;
+  }
+
+  if ($type == 'index') {
+    return theme($tema, array(
+      $variable => $result,
+      'form_servicios_filtering_form' => drupal_get_form('vas_servicios_filtering_form'),
+    ));
+  }
+  else {
+    return theme($tema, array($variable => $result));
+  }
+}
+
+/**
+ * Function that processes the query directly to the WS. Actually implemented only for GET queries
+ * @param $url is the url to the WS endpoint
+ * @return the json encoded response from the server
+ */
+function vas_servicios_process_query_ws($url){
+  $options = array('method' => 'GET');
+  $result = drupal_http_request($url, $options);
+  $json = json_decode($result->data);
+  //drupal_set_message(sprintf('<pre>%s</pre>', print_r($result, TRUE)));
+  return $json;
+}
+
+/**
+ * Implements hook_menu
+ */
+function vas_servicios_menu() {
+  $items['proyectos'] = array(
+    'title' => t('Proyectos vigentes'),
+    'page callback' => 'vas_servicios_query_ws',
+    'page arguments' => array('index'),
+    'access callback' => TRUE,
+  );
+  $items['proyectos/%'] = array(
+    'title' => t('Ficha del proyecto'),
+    'page callback' => 'vas_servicios_query_ws',
+    'page arguments' => array('retrieve',1),
+    'access callback' => TRUE,
+  );
+  $items['tematica/proyectos/%'] = array(
+    'title' => t('Temáticas de acción'),
+    'page callback' => 'vas_servicios_listado_proyectos',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme
+ */
+function vas_servicios_theme(){
+  return array(
+    'indice_proyectos' => array(
+      'variables' => array(
+        'proyectos' => NULL,
+        'form_servicios_filtering_form' => NULL
+      ),
+    ),
+    'tabla_proyectos' => array(
+      'variables' => array(
+        'proyectos' => NULL,
+      ),
+    ),
+    'proyecto' => array(
+      'variables' => array(
+        'proyecto' => NULL,
+      )
+    ),
+  );
+}
+
+/**
+ * Función de theming para indice_proyectos
+ */
+function theme_indice_proyectos($variables) {
+  $proyectos = $variables['proyectos'];
+  $form = $variables['form_servicios_filtering_form'];
+  $output = '<div id="proyectos-wrapper">';
+  $output .= drupal_render($form);
+  $output .= theme('tabla_proyectos', array('proyectos' => $proyectos));
+  $output .= '</div>';
+
+  return $output;
+}
+
+/**
+ * Función de theming para tabla_proyectos
+ */
+function theme_tabla_proyectos($variables) {
+
+  $proyectos = $variables['proyectos'];
+  $output = '';
+  if($proyectos){
+    $rows = array();
+    $header = array('Código', 'Nombre del proyecto', 'Unidad académica');
+    foreach ($proyectos as $proyecto) {
+      $rows[] = array(
+        $proyecto->codigo,
+        l($proyecto->nombre, 'proyectos/' . $proyecto->codigo),
+        $proyecto->unidad,
+      );
+    }
+    $output = '<div id="proyectos">';
+    $per_page = 15;
+    //Initialize the pager
+    $current_page = pager_default_initialize(count($rows), $per_page);
+    // Split your list into page sized chunks
+    $chunks = array_chunk($rows, $per_page, TRUE);
+    // Show the appropriate items from the list
+    $output .= theme_table(array(
+      'header' => $header,
+      'rows' => $chunks[$current_page],
+      'attributes' => array ('id' => 'table-proyectos'),
+      'caption' => t('Proyectos'),
+      'colgroups' => array(),
+      'sticky' => FALSE,
+      'empty' => t('No hay registros'),
+    ));
+    // Show the pager
+    $output .= theme('pager', array('quantity',count($rows)));
+    $output .= '</div>';
+
+  }
+  return $output;
+}
+
+/**
+ * Función de theming para proyecto
+ */
+function theme_proyecto($variables) {
+
+  $secciones = array(
+    1 => 'Trabajo Comunal Universitario',
+    2 => 'Extensión Docente',
+    3 => 'Extensión Cultural'
+  );
+
+  $clases_secciones = array(
+    1 => 'ficha-proyecto-tcu',
+    2 => 'ficha-proyecto-ed',
+    3 => 'ficha-proyecto-ec'
+  );
+
+  $proyecto = $variables[proyecto];
+  //drupal_set_message(print_r($variables, TRUE));
+  $output = '<div class="ficha-proyecto ' . $clases_secciones[$proyecto->seccion] . '">';
+  // Código y nombre
+  $output .= '<h2>' . $proyecto->codigo . ' ' . $proyecto->nombre . '</h2>';
+  $output .= '<div class="ficha-proyecto-content">';
+  // Unidad académica
+  $output .= '<div class="ficha-proyecto-row ficha-proyecto-row-odd ficha-proyecto-unidad"><div class="ficha-proyecto-label">Unidad Académica</div>';
+  $output .= '<div class="ficha-proyecto-value">' . $proyecto->unidad . '</div></div>';
+  // Sección de la VAS
+  $output .= '<div class="ficha-proyecto-row ficha-proyecto-row-even ficha-proyecto-seccion"><div class="ficha-proyecto-label">Sección</div>';
+  $output .= '<div class="ficha-proyecto-value">' . $secciones[$proyecto->seccion] . '</div></div>';
+  // Ubicación geográfica (múltiples valores)
+  $output .= '<div class="ficha-proyecto-row ficha-proyecto-row-odd ficha-proyecto-ubicacion"><div class="ficha-proyecto-label">Ubicación geográfica</div>';
+  $output .= '<div class="ficha-proyecto-value">';
+  foreach ($proyecto->ubicaciones as $ubicacion)
+    $output .= '<p>' . $ubicacion . '</p>';
+  $output .= '</div></div>';
+  // Responsables (múltiples valores)
+  $output .= '<div class="ficha-proyecto-row ficha-proyecto-row-even ficha-proyecto-responsables"><div class="ficha-proyecto-label">Responsables del proyecto</div>';
+  $output .= '<div class="ficha-proyecto-value">';
+  foreach ($proyecto->responsables as $responsable)
+    $output .= '<p>' . $responsable . '</p>';
+  $output .= '</div></div>';
+  // Colaboradores (múltiples valores)
+  $output .= '<div class="ficha-proyecto-row ficha-proyecto-row-odd ficha-proyecto-colaboradores"><div class="ficha-proyecto-label">Colaboradores</div>';
+  $output .= '<div class="ficha-proyecto-value">';
+  foreach ($proyecto->colaboradores as $colaborador)
+    $output .= '<p>' . $colaborador . '</p>';
+  $output .= '</div></div>';
+  // Objetivo
+  $output .= '<div class="ficha-proyecto-row ficha-proyecto-row-even ficha-proyecto-objetivo"><div class="ficha-proyecto-label">Objetivo</div>';
+  $output .= '<div class="ficha-proyecto-value">' . $proyecto->objetivo . '</div></div>';
+
+  $output .= '</div></div>';
+  return $output;
+
+}
+
+/* 
+ * Listado de todos los proyectos por temática.
+ *
+ */
+function vas_servicios_listado_proyectos($tematica) {
+
+  // Obtiene el término de taxonomía
+  $name = str_replace('-', ' ', $tematica);
+  $terms = taxonomy_get_term_by_name($name, 'tematicas');
+
+  if (empty($terms)) {
+    return '<p>Error: Esta temática no existe.</p>';
+  }
+
+  $term = array_shift($terms);
+
+  menu_tree_set_path('menu-tematicas-accion', 'taxonomy/term/' . $term->tid);
+
+  $output = '<div class="field field-name-title"><h2>' . $term->name . '</h2></div>';
+  $output .= '<div class="taxonomy-term-description">' . $term->description . '</div>';
+
+  $options = array('id_tematica' => $term->field_id[LANGUAGE_NONE][0]['value'],
+'id_seccion'=>-1, 'id_provincia'=>-1, 'codigo'=>-1);
+  $url = vas_servicios_construct_url('index', $options);
+  $result   = vas_servicios_process_query_ws($url);
+
+  if (empty($result)) {
+    $output .= '<p>No se encontró ningún proyecto en esta temática.</p>';
+    return $output;
+  }
+
+  $output .= '<div id="proyectos">';
+  $per_page = 20;
+  //Initialize the pager
+  $current_page = pager_default_initialize(count($result), $per_page);
+  // Split your list into page sized chunks
+  $chunks = array_chunk($result, $per_page, TRUE);
+  // Show the appropriate items from the list
+
+  $output .= '<ul class="tematica-list">';
+
+  foreach ($chunks[$current_page] as $proyecto) {
+    $output .= '<li>' . l($proyecto->codigo . ': ' . $proyecto->nombre, 'proyectos/' . $proyecto->codigo) . '</li>';
+  }
+
+  $output .= '</ul>';
+  // Show the pager
+  $output .= theme('pager', array('quantity' => 3));
+  $output .= '</div>';
+
+  return $output;
+}
+
+/* 
+ * Bloque para cambiar entre proyectos y noticias
+ *
+ */
+
+/*
+ * Implements hook_block_info()
+ *
+ */
+function vas_servicios_block_info() {
+  $blocks['tematicas_tabs'] = array(
+    'info' => t('Tabs Temáticas'),
+  );
+
+  return $blocks;
+}
+
+/*
+ * Implements hook_block_view()
+ *
+ */
+function vas_servicios_block_view($delta = '') {
+  if ($delta == 'tematicas_tabs') {
+    $path = current_path();
+    $alias = drupal_lookup_path('alias', $path);
+    if ($alias)
+      $path = $alias;
+    $path_components = explode('/', $path);
+    $block['subject'] = '';
+    $block['content'] = '<ul class="menu">';
+    $block['content'] .= '<li>' . l(t('Últimas noticias'), drupal_lookup_path('source', 'tematica/noticias/' . $path_components[2])) . '</li>';
+    $block['content'] .= '<li>' . l(t('Proyectos vigentes'), 'tematica/proyectos/' . $path_components[2]) . '</li>';
+    $block['content'] .= '</ul>';
+    return $block;
+  }
+}
+
+

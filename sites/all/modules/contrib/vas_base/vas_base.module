@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Base VAS feature.
+ */
+
+include_once 'vas_base.features.inc';

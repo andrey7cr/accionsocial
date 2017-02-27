@@ -1,0 +1,5 @@
+name = Vas Servicios
+description = Consume los servicios del sitio de la VAS actual
+core = 7.x
+package = VAS
+files[] = vas_servicios.module

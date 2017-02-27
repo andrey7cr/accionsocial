@@ -1,0 +1,23 @@
+--- sites/all/modules/gmap/gmap.module
++++ sites/all/modules/gmap/gmap.module
+@@ -503,6 +503,20 @@
+ 
+   $dir = "public://js/";
+ 
++  //Remove old markerfile first
++  $oldfid = variable_get('gmap_marker_file', false);
++  if($oldfid){
++    $oldmarkers = file_load($oldfid);
++    if($oldmarkers) {
++      if (file_delete($oldmarkers,$true)){
++       variable_del('gmap_marker_file');
++      }  
++    } else {
++      //could not load exitinf file, remove
++      variable_del('gmap_marker_file');
++    }   
++  }  
++
+   // Make sure js/ exists in the files folder.
+   if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
+     $file = file_save_data($contents, 'public://js/gmap_markers.js', FILE_EXISTS_REPLACE);

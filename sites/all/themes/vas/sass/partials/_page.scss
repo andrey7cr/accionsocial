@@ -1,0 +1,351 @@
+/**
+ * Tema para el sitio web VAS - UCR
+ * page: layout y estilos generales para todas las páginas del sitio
+ *
+ */
+
+/* Layout general */
+
+html {
+  margin: 0;
+  background-color: #507391;
+  @include background(linear-gradient(#507391, #cdd7e0));
+}
+
+body {
+  width: 985px;
+  margin: 0 auto;
+  background-color: transparent;
+}
+
+.utility-bar {
+  position: relative;
+}
+
+.header, #areas-vas, .main-content, .footer {
+  margin: 0 25px;
+  width: 930px;
+}
+
+.header {
+  background: $color-base url(../images/header-bg.png) no-repeat center top;
+  position: relative;
+}
+
+.seccion-ec .header {
+  background-color: $color-ec;
+}
+
+.seccion-ed .header {
+  background-color: $color-ed;
+}
+
+.seccion-tcu .header {
+  background-color: $color-tcu;
+}
+
+.header .grid, .main-content, .footer {
+  border: 5px solid #ccc;
+  max-width: none;
+}
+
+.header .grid, .main-content {
+  border-bottom: none;
+}
+
+.main-content, .footer {
+  border-top: none;
+  background-color: #fff;
+  width: 930px;
+}
+
+.main-content {
+  padding: 0 0 30px 35px;
+}
+
+.footer {
+  height: 36px;
+  background-image: url(../images/footer-bg.png);
+}
+
+.sidebar-second .main-wrapper {
+  @include grid-span(2, 1);
+}
+
+#sidebar-second {
+  @include grid-span(1, 3);
+}
+
+.two-sidebars #sidebar-first {
+  @include grid-span(1, 1, $gutter: 0);
+}
+
+.two-sidebars .main-wrapper {
+  @include grid-span(1, 2);
+}
+
+.one-sidebar .main {
+  width: auto;
+  padding: 0;
+}
+
+/* header */
+#firma-ucr {
+  display: block;
+  margin: 5px 0 0 20px;
+}
+
+#site-name {
+  margin: 12px 0 12px 35px;
+  line-height: 1em;
+  @include font-size(30);
+  a {
+    color: #fff;
+  }
+}
+
+#logo {
+  position: absolute;
+  right: 30px;
+  bottom: 12px;
+  img {
+    display: block;
+  }
+}
+
+/* Áreas de la VAS */
+#areas-vas {
+  background-color: #fff;
+  border-left: 5px solid #ccc;
+  border-right: 5px solid #ccc;
+  padding-left: 35px;
+  padding-bottom: 10px;
+  h2 {
+    display: none;
+  }
+  li {
+    float: left;
+    margin: 0 15px 0 0;
+    padding: 0;
+  }
+  a {
+    display: block;
+    color: #fff;
+    padding: 0 15px 0 75px;
+    @include border-bottom-left-radius(40px);
+    height: 40px;
+    width: 220px;
+    line-height: 40px;
+    text-align: right;
+    @include font-size(14);
+  }
+}
+
+.front #areas-vas {
+  padding-bottom: 20px;
+}
+
+#nav-areas-ec {
+  background-color: $color-ec;
+}
+
+#nav-areas-ed {
+  background-color: $color-ed;
+}
+
+#nav-areas-tcu {
+  background-color: $color-tcu;
+  line-height: 1.2em !important;
+  padding-top: 3px !important;
+}
+
+/* Menú de Redes Sociales */
+.nav-rrss {
+  position: absolute;
+  right: 0;
+  top: 70px;
+  z-index: 20;
+  width: 30px;
+  border: 3px solid #ccc;
+  border-left: none;
+  @include border-radius(0 8px 8px 0);
+  background-color: #2a6a95;
+  @include background-image(linear-gradient(#2a6a95, #3eaae8));
+  padding: 8px 0;
+  ul.menu {
+    li {
+      margin: 0 0  5px 2px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    a {
+      display: block;
+      width: 22px;
+      height: 22px;
+      text-indent: -9999px;
+    }
+  }
+}
+
+.rrss-fb, .rrss-fb:hover {
+  background-image: url(../images/icono-fb.png);
+}
+
+.rrss-tw, .rrss-tw:hover {
+  background-image: url(../images/icono-twitter.png);
+}
+
+.rrss-yt, .rrss-yt:hover {
+  background-image: url(../images/icono-youtube.png);
+}
+.rrss-ct, .rrss-ct:hover {
+  background-image: url(../images/icono-directorio.png);
+}
+/* Buscador de proyectos */
+#proyectos-wrapper {
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    legend {
+      @include font-size(14);
+      margin-bottom: 15px;
+    }
+  }
+  .fieldset-wrapper {
+    background-color: #efe5bf;
+    padding: 10px;
+    @include border-radius(10px);
+  }
+  .form-type-select {
+    float: left;
+    margin-right: 12px;
+  }
+  input {
+    background-color: #ccbd89;
+    padding: 5px;
+    border: none;
+    @include border-radius(5px);
+    margin-right: 5px;
+  }
+  table {
+    margin-bottom: 20px;
+    @include font-size(12);
+  }
+  thead {
+    background-color: #ccbd89;
+    color: #fff;
+  }
+  td {
+    padding: 5px;
+  }
+  th {
+    padding: 10px;
+    font-weight: 400;
+    border-bottom: none;
+  }
+  tr.odd {
+    background-color: #f5efd9;
+    border-bottom: none;
+  }
+  tr.even {
+    border-bottom: none;
+    background-color: #e1d9ba;
+  }
+}
+
+/* Ficha del proyecto */
+.ficha-proyecto {
+  h2 {
+    width: 60%;
+    background-color: $color-base;
+    margin: 0;
+    padding: 10px;
+    @include border-radius(10px 10px 0 0);
+    color: #fff;
+    @include font-size(14);
+    line-height: 1.3em;
+  }
+  .ficha-proyecto-content {
+    @include border-radius(0 10px 10px 10px);
+    overflow: hidden;
+  }
+  .ficha-proyecto-row-odd {
+    background-color: #f5efd9;
+  }
+  .ficha-proyecto-row-even {
+    background-color: #e1d9ba;
+  }
+  p {
+    margin: 0;
+  }
+  .ficha-proyecto-row {
+    overflow: hidden;
+  }
+  .ficha-proyecto-label {
+    float: left;
+    width: 20%;
+    padding: 10px 20px;
+    color: #4f3c0c;
+    @include font-size(11);
+  }
+  .ficha-proyecto-value {
+    float: right;
+    width: 80%;
+    padding: 10px;
+    font-weight: 600;
+    @include font-size(13);
+    line-height: 1.5em;
+  }
+}
+
+.ficha-proyecto-tcu h2 {
+  background-color: $color-tcu;
+}
+
+.ficha-proyecto-ec h2 {
+  background-color: $color-ec;
+}
+
+.ficha-proyecto-ed h2 {
+  background-color: $color-ed;
+}
+
+/* Formulario de contacto */
+.page-contact {
+  .main-wrapper {
+    padding: 30px;
+    background-color: #eee;
+    @include border-radius(20px);
+  }
+  form {
+    @include font-size(13);
+  }
+  input[type=text] {
+    padding: 5px;
+  }
+  label {
+    margin-bottom: 5px;
+  }
+  input[type=submit] {
+    @include font-size(22);
+  }
+  #edit-actions {
+    margin: 0;
+  }
+  .grippie {
+    display: none;
+  }
+}
+
+/* Páginas de búsqueda */
+.view-busqueda {
+  .view-header {
+    margin-bottom: 20px;
+    @include font-size(16);
+  }
+  .view-empty {
+    @include font-size(16);
+  }
+}

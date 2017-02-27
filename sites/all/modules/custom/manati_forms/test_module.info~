@@ -1,0 +1,5 @@
+name = Custom testing module
+description = Module for several custom tests.
+package = MANATI
+version = 7.x-1.0
+core = 7.x

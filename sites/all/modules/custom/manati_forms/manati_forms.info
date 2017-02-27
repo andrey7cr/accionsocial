@@ -1,0 +1,7 @@
+name = Custom forms custom module
+description = Module for several custom tests.
+package = Manatí
+version = 7.x-1.0
+core = 7.x
+files[] = manati_forms.module
+scripts[] = js/manati_forms.js

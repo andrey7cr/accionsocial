@@ -1,0 +1,49 @@
+<?php
+
+function vas_preprocess_page(&$vars) {
+  if (isset($vars['node']) && $vars['node']->type == 'actividad') {
+		$vars['title'] = 'Calendario';
+	}
+  if (arg(0) == 'taxonomy' && arg(1) == 'term') {
+    $term = taxonomy_term_load(arg(2));
+    if ($term->vid == 3)   // Temáticas de acción
+      $vars['title'] = "Temáticas de acción";
+  }
+	drupal_add_library('system','ui.accordion');
+
+  // Template custom para páginas de Temáticas de acción
+  $path = drupal_get_path_alias(current_path());
+  if (preg_match('/^tematica/', $path)) {
+    $vars['theme_hook_suggestions'][] = 'page__tematicas';
+  }
+}
+
+function vas_colorbox_imagefield($variables) {
+  $class = array('colorbox');
+
+  if ($variables['image']['style_name'] == 'hide') {
+    $image = '';
+    $class[] = 'js-hide';
+  }
+  elseif (!empty($variables['image']['style_name'])) {
+    $image = theme('image_style', $variables['image']);
+  }
+  else {
+    $image = theme('image', $variables['image']);
+  }
+
+  $options = drupal_parse_url($variables['path']);
+  $options += array(
+    'html' => TRUE,
+    'attributes' => array(
+      'title' => $variables['title'],
+      'class' => $class,
+      'rel' => $variables['gid'],
+    ),
+    'language' => array('language' => NULL),
+  );
+
+  $output = '<div class="img-colorbox">' . l($image, $options['path'], $options);
+  $output .= '<span class="caption">' . $variables['title'] . '</span></div>';
+  return $output;
+}

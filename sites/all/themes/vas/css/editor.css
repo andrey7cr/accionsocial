@@ -1,0 +1,57 @@
+html {
+  font-size: 62.5%;
+}
+
+body {
+  font: 1em/1.3em 'Open Sans', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+}
+
+p, ol, ul, dl {
+	font-size: 13px;
+  font-size: 1.3rem;
+  line-height: 1.5em;
+}
+
+p {
+  margin: 0.3em 0 0.8em 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal; 
+  margin: 0.3em 0 0.8em 0;
+}
+
+h2 {
+	font-size: 20px;
+  font-size: 2rem;
+}
+
+h3 {
+	font-size: 18px;
+  font-size: 1.8rem;
+}
+
+h4 {
+	font-size: 16px;
+  font-size: 1.6rem;
+}
+
+h5 {
+	font-size: 14px;
+  font-size: 1.4rem;
+}
+
+h6 {
+	font-size: 13px;
+  font-size: 1.3rem;
+}
+
+a:link, a:visited {
+	color: #57c4e8;
+}
